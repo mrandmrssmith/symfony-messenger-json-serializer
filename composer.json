@@ -11,9 +11,14 @@
     },
     "authors": [
         {
-            "name": "Guillaume",
+            "name": "Guillaume Vermeersch",
             "email": "guillaume.vermeersch@smithhotels.com"
         }
     ],
+    "autoload": {
+        "psr-4": {
+            "MrAndMrsSmith\\SymfonyMessengerJSONSerializer\\": ""
+        }
+    },
     "minimum-stability": "stable"
 }

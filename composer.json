@@ -1,0 +1,19 @@
+{
+    "name": "mrandmrssmith/symfony-messenger-json-serializer",
+    "description": "Provide a JSON serializer for Symfony Messenger messages",
+    "type": "library",
+    "require": {
+        "php": "^7.2|8.0",
+        "ext-json": "*",
+        "symfony/messenger": "^4.4",
+        "symfony/serializer": "^4.4",
+        "symfony/property-access": "^4.4"
+    },
+    "authors": [
+        {
+            "name": "Guillaume",
+            "email": "guillaume.vermeersch@smithhotels.com"
+        }
+    ],
+    "minimum-stability": "stable"
+}

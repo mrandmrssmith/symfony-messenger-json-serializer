@@ -1,0 +1,1 @@
+# symfony-messenger-json-serializer

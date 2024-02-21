@@ -7,6 +7,7 @@ use MrAndMrsSmith\SymfonyMessengerJSONSerializer\Tests\Dummy\DummyObject;
 use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\MessageDecodingFailedException;
+use Symfony\Component\Messenger\Stamp\BusNameStamp;
 use Symfony\Component\Serializer\SerializerInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -25,6 +26,16 @@ class MessengerJSONSerializerTest extends TestCase
         $serializer->decode([]);
     }
 
+    public function testDecodeFailDeserializationException()
+    {
+        $serializerMock = $this->getSerializerMock();
+        $serializerMock->method('deserialize')->willThrowException(new \Exception);
+
+        $serializer = new MessengerJSONSerializer($serializerMock, '');
+        $this->expectException(MessageDecodingFailedException::class);
+        $serializer->decode(['body' => ['property' => 'value']]);
+    }
+
     public function testDecodeSuccessWithoutStamps()
     {
         $mockedSerializer = $this->getSerializerMock();
@@ -35,6 +46,30 @@ class MessengerJSONSerializerTest extends TestCase
 
         $this->assertInstanceOf(DummyObject::class, $enveloppe->getMessage());
         $this->assertEmpty($enveloppe->all());
+    }
+
+    public function testDecodeSuccessWithStamps()
+    {
+        $mockedSerializer = $this->getSerializerMock();
+        $mockedSerializer->method('deserialize')->willReturn(new DummyObject());
+        $serializer = new MessengerJSONSerializer($mockedSerializer, DummyObject::class);
+
+        $enveloppe = $serializer->decode(
+            [
+                'body' => ['property' => 'value'],
+                'headers' => [
+                    'stamps' => json_encode(
+                        [
+                            'UnkownStampType' => [],
+                            DummyObject::class => [[]],
+                        ]
+                    )
+                ]
+            ]
+        );
+
+        $this->assertInstanceOf(DummyObject::class, $enveloppe->getMessage());
+        $this->assertCount(1, $enveloppe->all());
     }
 
     public function testEncode()

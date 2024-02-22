@@ -24,13 +24,13 @@ Please create new or update any documentation which reflects changes to current 
 
 #### Building environment
 
-Docker and Docker Compose will help with development of this project.
+Docker will help with development of this project and a Dockerfile is provided.
 
-```shell
-
-```
+:grey_exclamation: **Please see the `Makefile` for all the helper commands to get you up and running!**
 
 #### Debugging
+
+Instructons to follow, but `xdebug` IS installed
 
 ```shell
 
@@ -38,9 +38,8 @@ Docker and Docker Compose will help with development of this project.
 
 #### Code Linting & Testing
 
-```shell
+:grey_exclamation: **Please see the `Makefile` for all the helper commands to get you up and running!**
 
-```
 
 ### Issues
 

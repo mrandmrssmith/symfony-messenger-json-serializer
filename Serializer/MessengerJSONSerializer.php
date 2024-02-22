@@ -10,10 +10,14 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 class MessengerJSONSerializer implements MessageSerializerInterface
 {
-    /** @var SerializerInterface */
+    /**
+     * @var SerializerInterface
+     */
     private $serializer;
 
-    /** @var string */
+    /**
+     * @var string
+     */
     private $messageClass;
 
     public function __construct(
@@ -24,13 +28,9 @@ class MessengerJSONSerializer implements MessageSerializerInterface
         $this->messageClass = $messageClass;
     }
 
-    /**
-     * @param array $encodedEnvelope
-     * @return Envelope
-     */
     public function decode(array $encodedEnvelope): Envelope
     {
-        if (!isset($encodedEnvelope['body'])) {
+        if (! isset($encodedEnvelope['body'])) {
             throw new MessageDecodingFailedException('Encoded envelope should have body');
         }
         try {
@@ -49,10 +49,6 @@ class MessengerJSONSerializer implements MessageSerializerInterface
         return new Envelope($message, $stamps ?? []);
     }
 
-    /**
-     * @param Envelope $envelope
-     * @return array
-     */
     public function encode(Envelope $envelope): array
     {
         $message = $envelope->getMessage();
@@ -73,7 +69,7 @@ class MessengerJSONSerializer implements MessageSerializerInterface
             $allStamps = array_merge($allStamps, (array) $stamps);
         }
         foreach ($allStamps as $key => $stamps) {
-            if (!is_array($stamps)) {
+            if (! is_array($stamps)) {
                 continue;
             }
             unset($allStamps[$key]);
@@ -95,11 +91,11 @@ class MessengerJSONSerializer implements MessageSerializerInterface
     {
         $decodedStamps = [];
         foreach ($stamps as $stampType => $stampsOfType) {
-            if (!class_exists($stampType)) {
+            if (! class_exists($stampType)) {
                 continue;
             }
             foreach ($stampsOfType as $stamp) {
-                if (!is_string(json_encode($stamp))) {
+                if (! is_string(json_encode($stamp))) {
                     continue;
                 }
                 $decodedStamps[] = $this->serializer->deserialize(

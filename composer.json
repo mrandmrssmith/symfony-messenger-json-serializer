@@ -3,16 +3,20 @@
     "description": "Provide a JSON serializer for Symfony Messenger messages",
     "type": "library",
     "require": {
-        "php": "^7.2|8.0",
+        "php": ">=7.2",
         "ext-json": "*",
-        "symfony/messenger": "^4.4",
-        "symfony/serializer": "^4.4",
-        "symfony/property-access": "^4.4"
+        "symfony/messenger": ">=4.4",
+        "symfony/serializer": ">=4.4",
+        "symfony/property-access": ">=4.4"
     },
     "authors": [
         {
             "name": "Guillaume Vermeersch",
             "email": "guillaume.vermeersch@smithhotels.com"
+        },
+        {
+            "name": "Jack Wilson",
+            "email": "jack.wilson@smithhotels.com"
         }
     ],
     "autoload": {
@@ -20,8 +24,16 @@
             "MrAndMrsSmith\\SymfonyMessengerJSONSerializer\\": ""
         }
     },
+    "config": {
+        "sort-packages": true
+    },
     "minimum-stability": "stable",
     "require-dev": {
-        "phpunit/phpunit": "^9.6"
+        "phpstan/phpstan": "^1.10",
+        "phpstan/phpstan-phpunit": "^1.3",
+        "phpunit/phpunit": ">=8.5",
+        "roave/security-advisories": "dev-master",
+        "symplify/easy-coding-standard": "^12.1",
+        "vimeo/psalm": "^4.30||^5.22"
     }
 }

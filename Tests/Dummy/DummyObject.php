@@ -2,7 +2,4 @@
 
 namespace MrAndMrsSmith\SymfonyMessengerJSONSerializer\Tests\Dummy;
 
-class DummyObject
-{
-
-}
+class DummyObject {}

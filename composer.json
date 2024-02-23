@@ -2,6 +2,7 @@
     "name": "mrandmrssmith/symfony-messenger-json-serializer",
     "description": "Provide a JSON serializer for Symfony Messenger messages",
     "type": "library",
+    "license": "MIT",
     "require": {
         "php": ">=7.2",
         "ext-json": "*",

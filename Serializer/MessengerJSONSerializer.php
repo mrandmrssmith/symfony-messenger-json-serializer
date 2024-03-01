@@ -16,16 +16,16 @@ class MessengerJSONSerializer implements MessageSerializerInterface
     private $serializer;
 
     /**
-     * @var string
+     * @var MessageClassResolver
      */
-    private $messageClass;
+    private $messageClassResolver;
 
     public function __construct(
         SerializerInterface $serializer,
-        string $messageClass
+        MessageClassResolver $messageClassResolver
     ) {
         $this->serializer = $serializer;
-        $this->messageClass = $messageClass;
+        $this->messageClassResolver = $messageClassResolver;
     }
 
     public function decode(array $encodedEnvelope): Envelope
@@ -36,7 +36,7 @@ class MessengerJSONSerializer implements MessageSerializerInterface
         try {
             $message = $this->serializer->deserialize(
                 $encodedEnvelope['body'],
-                $this->messageClass,
+                $this->messageClassResolver->resolveClass($encodedEnvelope),
                 'json'
             );
             if (isset($encodedEnvelope['headers']['stamps'])) {

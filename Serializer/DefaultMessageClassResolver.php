@@ -4,10 +4,13 @@ namespace MrAndMrsSmith\SymfonyMessengerJSONSerializer\Serializer;
 
 class DefaultMessageClassResolver implements MessageClassResolver
 {
+    /**
+     * @var string
+     */
     private $messageClass;
 
     public function __construct(
-      string $messageClass
+        string $messageClass
     ) {
         $this->messageClass = $messageClass;
     }

@@ -40,7 +40,12 @@ class MessengerJSONSerializer implements MessageSerializerInterface
                 'json'
             );
             if (isset($encodedEnvelope['headers']['stamps'])) {
-                $stamps = $this->decodeStamps(json_decode($encodedEnvelope['headers']['stamps'], true));
+                $stamps = $this->decodeStamps(
+                    json_decode(
+                        $encodedEnvelope['headers']['stamps'],
+                        true
+                    )
+                );
             }
         } catch (\Throwable $exception) {
             throw new MessageDecodingFailedException($exception->getMessage(), 0, $exception);
@@ -79,7 +84,11 @@ class MessengerJSONSerializer implements MessageSerializerInterface
         $serializedStamps = [];
         foreach ($allStamps as $stamp) {
             $serializedStamps[get_class($stamp)][] = json_decode(
-                $this->serializer->serialize($stamp, 'json'),
+                $this->serializer->serialize(
+                    $stamp,
+                    'json',
+                    ['messenger_serialization' => true]
+                ),
                 true
             );
         }
@@ -101,7 +110,8 @@ class MessengerJSONSerializer implements MessageSerializerInterface
                 $decodedStamps[] = $this->serializer->deserialize(
                     json_encode($stamp),
                     $stampType,
-                    'json'
+                    'json',
+                    ['messenger_serialization' => true]
                 );
             }
         }

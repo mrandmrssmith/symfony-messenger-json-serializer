@@ -2,6 +2,7 @@
 
 namespace MrAndMrsSmith\SymfonyMessengerJSONSerializer\Tests\Serializer;
 
+use MrAndMrsSmith\SymfonyMessengerJSONSerializer\Serializer\MessageClassResolver;
 use MrAndMrsSmith\SymfonyMessengerJSONSerializer\Serializer\MessengerJSONSerializer;
 use MrAndMrsSmith\SymfonyMessengerJSONSerializer\Tests\Dummy\DummyObject;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -12,49 +13,86 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 class MessengerJSONSerializerTest extends TestCase
 {
-    private function getSerializerMock(): MockObject
-    {
-        return $this->createMock(SerializerInterface::class);
-    }
+    /**
+     * @var SerializerInterface|MockObject
+     */
+    private $serializer;
 
+    /**
+     * @var MessageClassResolver|MockObject
+     */
+    private $classResolver;
+
+    /**
+     * @var MessengerJSONSerializer
+     */
+    private $messageSerializer;
+
+    public function setUp(): void
+    {
+        $this->serializer = $this->createMock(SerializerInterface::class);
+        $this->classResolver = $this->getMockForAbstractClass(MessageClassResolver::class);
+
+        $this->messageSerializer = new MessengerJSONSerializer($this->serializer, $this->classResolver);
+    }
     public function testDecodeFailNoBody(): void
     {
-        $serializer = new MessengerJSONSerializer($this->getSerializerMock(), '');
         $this->expectException(MessageDecodingFailedException::class);
-        $serializer->decode([]);
+
+        $this->messageSerializer->decode([]);
     }
 
     public function testDecodeFailDeserializationException(): void
     {
-        $serializerMock = $this->getSerializerMock();
-        $serializerMock->method('deserialize')->willThrowException(new \Exception());
+        $this->classResolver
+            ->expects($this->once())
+            ->method('resolveClass')
+            ->willReturn(DummyObject::class);
+        $this->serializer
+            ->expects($this->once())
+            ->method('deserialize')
+            ->willThrowException(new \Exception());
 
-        $serializer = new MessengerJSONSerializer($serializerMock, '');
         $this->expectException(MessageDecodingFailedException::class);
-        $serializer->decode(['body' => ['property' => 'value']]);
+        $this->messageSerializer->decode(['body' => ['property' => 'value']]);
     }
 
     public function testDecodeSuccessWithoutStamps(): void
     {
-        $mockedSerializer = $this->getSerializerMock();
-        $mockedSerializer->method('deserialize')->willReturn(new DummyObject());
-        $serializer = new MessengerJSONSerializer($mockedSerializer, DummyObject::class);
+        $this->classResolver
+            ->expects($this->once())
+            ->method('resolveClass')
+            ->willReturn(DummyObject::class);
+        $this->serializer
+            ->expects($this->once())
+            ->method('deserialize')
+            ->willReturn(new DummyObject());
 
-        $enveloppe = $serializer->decode(['body' => ['property' => 'value']]);
+        $envelope = $this->messageSerializer->decode(['body' => ['property' => 'value']]);
 
-        $this->assertInstanceOf(DummyObject::class, $enveloppe->getMessage());
-        $this->assertEmpty($enveloppe->all());
+        $this->assertInstanceOf(DummyObject::class, $envelope->getMessage());
+        $this->assertEmpty($envelope->all());
     }
 
     public function testDecodeSuccessWithStamps(): void
     {
-        $mockedSerializer = $this->getSerializerMock();
-        $mockedSerializer->method('deserialize')->willReturn(new DummyObject());
-        $serializer = new MessengerJSONSerializer($mockedSerializer, DummyObject::class);
+        $this->classResolver
+            ->expects($this->once())
+            ->method('resolveClass')
+            ->willReturn(DummyObject::class);
+        $this->serializer
+            ->method('deserialize')
+            ->willReturnMap(
+                [
+                    [['property' => 'value'], DummyObject::class, 'json', new DummyObject()],
+                    [json_encode([]), DummyObject::class, 'json', ['messenger_serialization' => true]],
+                ]
+            )
+            ->willReturn(new DummyObject());
 
-        $enveloppe = $serializer->decode(
+        $envelope = $this->messageSerializer->decode(
             [
-                'body' => ['property' => 'value'],
+                'body' => '{"property": "value"}',
                 'headers' => [
                     'stamps' => json_encode(
                         [
@@ -66,19 +104,20 @@ class MessengerJSONSerializerTest extends TestCase
             ]
         );
 
-        $this->assertInstanceOf(DummyObject::class, $enveloppe->getMessage());
-        $this->assertCount(1, $enveloppe->all());
+        $this->assertInstanceOf(DummyObject::class, $envelope->getMessage());
+        $this->assertCount(1, $envelope->all());
     }
 
     public function testEncode(): void
     {
-        $mockedSerializer = $this->getSerializerMock();
-        $mockedSerializer->method('serialize')->willReturn('SerilizedMessage');
+        $this->serializer
+            ->expects($this->once())
+            ->method('serialize')
+            ->willReturn('SerilizedMessage');
 
-        $enveloppe = new Envelope(new DummyObject());
+        $envelope = new Envelope(new DummyObject());
 
-        $serializer = new MessengerJSONSerializer($mockedSerializer, DummyObject::class);
-        $encoded = $serializer->encode($enveloppe);
+        $encoded = $this->messageSerializer->encode($envelope);
 
         $this->assertEquals('SerilizedMessage', $encoded['body']);
     }

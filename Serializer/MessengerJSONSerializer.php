@@ -4,6 +4,7 @@ namespace MrAndMrsSmith\SymfonyMessengerJSONSerializer\Serializer;
 
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\MessageDecodingFailedException;
+use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 use Symfony\Component\Messenger\Stamp\NonSendableStampInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface as MessageSerializerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -48,7 +49,11 @@ class MessengerJSONSerializer implements MessageSerializerInterface
                 );
             }
         } catch (\Throwable $exception) {
-            throw new MessageDecodingFailedException($exception->getMessage(), 0, $exception);
+            throw new UnrecoverableMessageHandlingException(
+                'Could not decode message',
+                0,
+                new MessageDecodingFailedException($exception->getMessage(), 0, $exception)
+            );
         }
 
         return new Envelope($message, $stamps ?? []);

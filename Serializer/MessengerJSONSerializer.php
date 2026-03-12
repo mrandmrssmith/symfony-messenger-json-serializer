@@ -4,6 +4,7 @@ namespace MrAndMrsSmith\SymfonyMessengerJSONSerializer\Serializer;
 
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\MessageDecodingFailedException;
+use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 use Symfony\Component\Messenger\Stamp\NonSendableStampInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface as MessageSerializerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -16,16 +17,16 @@ class MessengerJSONSerializer implements MessageSerializerInterface
     private $serializer;
 
     /**
-     * @var string
+     * @var MessageClassResolver
      */
-    private $messageClass;
+    private $messageClassResolver;
 
     public function __construct(
         SerializerInterface $serializer,
-        string $messageClass
+        MessageClassResolver $messageClassResolver
     ) {
         $this->serializer = $serializer;
-        $this->messageClass = $messageClass;
+        $this->messageClassResolver = $messageClassResolver;
     }
 
     public function decode(array $encodedEnvelope): Envelope
@@ -36,14 +37,23 @@ class MessengerJSONSerializer implements MessageSerializerInterface
         try {
             $message = $this->serializer->deserialize(
                 $encodedEnvelope['body'],
-                $this->messageClass,
+                $this->messageClassResolver->resolveClass($encodedEnvelope),
                 'json'
             );
             if (isset($encodedEnvelope['headers']['stamps'])) {
-                $stamps = $this->decodeStamps(json_decode($encodedEnvelope['headers']['stamps'], true));
+                $stamps = $this->decodeStamps(
+                    json_decode(
+                        $encodedEnvelope['headers']['stamps'],
+                        true
+                    )
+                );
             }
         } catch (\Throwable $exception) {
-            throw new MessageDecodingFailedException($exception->getMessage(), 0, $exception);
+            throw new UnrecoverableMessageHandlingException(
+                'Could not decode message',
+                0,
+                new MessageDecodingFailedException($exception->getMessage(), 0, $exception)
+            );
         }
 
         return new Envelope($message, $stamps ?? []);
@@ -79,7 +89,11 @@ class MessengerJSONSerializer implements MessageSerializerInterface
         $serializedStamps = [];
         foreach ($allStamps as $stamp) {
             $serializedStamps[get_class($stamp)][] = json_decode(
-                $this->serializer->serialize($stamp, 'json'),
+                $this->serializer->serialize(
+                    $stamp,
+                    'json',
+                    ['messenger_serialization' => true]
+                ),
                 true
             );
         }
@@ -101,7 +115,8 @@ class MessengerJSONSerializer implements MessageSerializerInterface
                 $decodedStamps[] = $this->serializer->deserialize(
                     json_encode($stamp),
                     $stampType,
-                    'json'
+                    'json',
+                    ['messenger_serialization' => true]
                 );
             }
         }

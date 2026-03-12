@@ -27,9 +27,35 @@ framework:
 ```yaml
   external_message.messenger.serializer:
     class: MrAndMrsSmith\SymfonyMessengerJSONSerializer\Serializer\MessengerJSONSerializer
+    factory: [MrAndMrsSmith\SymfonyMessengerJSONSerializer\Serializer\MessengerJSONSerializerFactory, 'create']
     arguments:
-      $messageClass: MrAndMrsSmith\Queue\ExternalMessage
+      $serializer: '@serializer'
+      $messageClassResolver:  MrAndMrsSmith\Queue\ExternalMessage    
+
 ```
+That will create a serializer with default resolver which will use the message class name to deserialize the message.
+But you can create your own resolver and pass it to the serializer. Your resolver should implement `MessageClassResolver` and you can implement your own logic to resolve class name base on data in message for example get event name from header
+```php
+class MyMessageClassResolver implements MessageClassResolver
+{
+    public function resolveClass(array $encodedEnvelope): string;
+    {
+      // your logic to resolve class name
+    }
+}
+```
+```yaml
+  external_message.messenger.serializer:
+    class: MrAndMrsSmith\SymfonyMessengerJSONSerializer\Serializer\MessengerJSONSerializer
+    arguments:
+      $serializer: '@serializer'
+      $messageClassResolver: '@my_message_class_resolver'    
+
+  my_message_class_resolver:
+    class: MyMessageClassResolver
+```
+
+
 ## Support
 
 :hugs: Please consider contributing if you feel you can improve this package, otherwise submit an issue via the GitHub page and include as much
